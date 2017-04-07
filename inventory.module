@@ -1,0 +1,110 @@
+<?php
+
+/**
+ * @file
+ * Provides a Inventory Management System page in the administrative interface.
+ */
+
+/**
+* Implements hook_help().
+*/
+
+ function inventory_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#inventory':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Inventory module provides a <a href="@inventory">Inventory page</a> in the administrative interface for managing inventory and tracking inventory within your site.', array('@inventory' => url('admin/inventory'))) . '</p>';
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('Tracking inventory activity') . '</dt>';
+      $output .= '<dd>' . t('By enabling inventory admin can manage inventory at a centralized location.') . '</dd>';
+      $output .= '</dl>';
+      return $output;
+  }
+}
+
+/**
+* Implements hook_menu().
+*/
+
+function inventory_menu() {
+  $items['admin/inventory'] = array(
+    'title' => 'Inventory',
+    'description' => 'View and manage your inventory.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('inventory_config_form'),
+    'access arguments' => array('administer users'),
+    'type' => MENU_NORMAL_ITEM,
+    // Make this appear first, so for example, in admin menus, it shows up on
+    // the top corner of the window as a convenient "home link".
+    'weight' => -15,
+  );
+  
+  return $items;
+}
+
+/**
+* Admin form to config inventory settings
+*/
+
+function inventory_config_form($form, &$form_state) {
+  $form['inventory_content_type'] = array(
+                                '#type' => 'textfield',
+                                '#title' => 'Content Type',
+                                '#description' => t('Please enter machine name of content type.'),
+                                '#size' => 40,
+                                '#maxlength' => 50,
+                                '#value' => variable_get('inventory_content_type'),
+                                '#required' => TRUE,
+                            );
+ 
+  $form['inventory_unit_field'] = array(
+                                '#type' => 'textfield',
+                                '#title' => 'Unit Field',
+                                '#description' => t('Please enter machine name of unit field.'),
+                                '#size' => 40,
+                                '#maxlength' => 50,
+                                '#value' => variable_get('inventory_unit_field'),
+                                '#required' => TRUE,
+                            );
+  
+  $form['inventory_price_field'] = array(
+                                '#type' => 'textfield',
+                                '#title' => 'Price Field',
+                                '#description' => t('Please enter machine name of price field.'),
+                                '#size' => 40,
+                                '#maxlength' => 50,
+                                '#value' => variable_get('inventory_price_field'),
+                                '#required' => TRUE,
+                             );
+    // Submit button
+  $form['submit'] = array(
+                                '#type' => 'submit',
+                                '#value' => t('Save settings'),
+                        );
+  // Save dat automatically to drupal variable table
+  //return system_settings_form($form);
+  
+  return $form;
+}
+
+/**
+ * Form submission handler for inventory configuration settings
+ */
+function inventory_config_form_submit($form, &$form_state) {
+  // Save form data to drupal core variable table
+//    echo '<pre>';
+//    print_r($form_state[values]);
+//     echo '</pre>';
+//    die();
+// variable_set('inventory_content_type', $form_state['values']['inventory_content_type']);
+// variable_set('inventory_unit_field', $form_state['values']['inventory_unit_field']);
+// variable_set('inventory_price_field', $form_state['values']['inventory_price_field']);
+    
+drupal_write_record('inventory_config', $form_state['values']);
+
+ // display message
+ drupal_set_message(t('The settings have been saved'));
+ 
+}

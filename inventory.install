@@ -1,0 +1,71 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the inventory module.
+ */
+/**
+ * Implements hook_schema().
+ */
+/* function inventory_schema() {
+  $schema['inventory_config'] = array(
+    'description' => 'inventory configuration settings.',
+    'fields' => array(
+      'inventory_id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique content_type ID.',
+      ),
+      'content_type' => array(
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Content Type machine name.',
+        'translatable' => TRUE,
+      ),
+      'unit_field' => array(
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Unit field machine name',
+        'translatable' => TRUE,
+      ),
+      'price_field' => array(
+        'type' => 'varchar',
+         'length' => 50,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Price field machine name',
+        'translatable' => TRUE,
+      ),
+      'modified_date' => array(
+        'type' => 'datetime',
+        'not null' => TRUE,
+        'default' => 'NOW',
+        'description' => 'Last modified date and time',
+        'translatable' => FALSE,
+      ),  
+    ),
+    'primary key' => array('inventory_id'),
+    'unique keys' => 'content_type',
+    'indexes' => array(
+    'list' => array( 'content_type', 'unit_field' ),
+    ),
+  );
+
+  return $schema;
+}
+*/
+/**
+ * Implements hook_uninstall().
+ */
+function inventory_uninstall() {
+  variable_del('inventory_default_status');
+  variable_del('inventory_threshold_limit');
+  variable_del('inventory_threshold_window');
+}
+
+
