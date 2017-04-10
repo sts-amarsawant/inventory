@@ -47,15 +47,37 @@ function inventory_menu() {
 /**
 * Admin form to config inventory settings
 */
+global $data_exists;
 
 function inventory_config_form($form, &$form_state) {
+    global $data_exists;
+    // to display exiting data for editable form
+    $table = 'inventory_config'; // without prefix
+    
+    if( db_table_exists($table) ){
+       $result = db_select('inventory_config', 'i')
+                 ->fields('i')
+                 ->execute()
+                 ->fetchAssoc();
+    }
+    if( !empty($result) ){
+        $data_exists = TRUE;
+    }else {
+        $data_exists = FALSE;
+        $result = array( 'content_type' => NULL,
+                         'unit_field' => NULL,
+                         'price_field' => NULL,
+                  );
+    }
+    
+    // inventory config form        
   $form['inventory_content_type'] = array(
                                 '#type' => 'textfield',
                                 '#title' => 'Content Type',
                                 '#description' => t('Please enter machine name of content type.'),
                                 '#size' => 40,
                                 '#maxlength' => 50,
-                                '#value' => variable_get('inventory_content_type'),
+                                '#value' => $result['content_type'],
                                 '#required' => TRUE,
                             );
  
@@ -65,7 +87,7 @@ function inventory_config_form($form, &$form_state) {
                                 '#description' => t('Please enter machine name of unit field.'),
                                 '#size' => 40,
                                 '#maxlength' => 50,
-                                '#value' => variable_get('inventory_unit_field'),
+                                '#value' => $result['unit_field'],
                                 '#required' => TRUE,
                             );
   
@@ -75,14 +97,14 @@ function inventory_config_form($form, &$form_state) {
                                 '#description' => t('Please enter machine name of price field.'),
                                 '#size' => 40,
                                 '#maxlength' => 50,
-                                '#value' => variable_get('inventory_price_field'),
+                                '#value' => $result['price_field'],
                                 '#required' => TRUE,
                              );
     // Submit button
   $form['submit'] = array(
-                                '#type' => 'submit',
-                                '#value' => t('Save settings'),
-                        );
+                             '#type' => 'submit',
+                              '#value' => t('Save settings'),
+                      );
   // Save dat automatically to drupal variable table
   //return system_settings_form($form);
   
@@ -93,18 +115,26 @@ function inventory_config_form($form, &$form_state) {
  * Form submission handler for inventory configuration settings
  */
 function inventory_config_form_submit($form, &$form_state) {
-  // Save form data to drupal core variable table
-//    echo '<pre>';
-//    print_r($form_state[values]);
-//     echo '</pre>';
-//    die();
-// variable_set('inventory_content_type', $form_state['values']['inventory_content_type']);
-// variable_set('inventory_unit_field', $form_state['values']['inventory_unit_field']);
-// variable_set('inventory_price_field', $form_state['values']['inventory_price_field']);
-    
-drupal_write_record('inventory_config', $form_state['values']);
-
- // display message
- drupal_set_message(t('The settings have been saved'));
- 
+    global $data_exists;
+    $today = date("Y-m-d H:i:s");
+    $data = array( 'content_type' => $form_state['values']['inventory_content_type'],
+                   'unit_field' => $form_state['values']['inventory_unit_field'],
+                   'price_field' => $form_state['values']['inventory_price_field'],
+                   'modified_date' => $today
+            );
+    // using drupal core function to insert/update record
+    if( $data_exists ){
+        // update data
+        db_update('inventory_config') // Table name 
+            ->fields( $data )
+            ->condition('inventory_id', 1, '=')
+            ->execute();
+        // display message
+        drupal_set_message(t('The settings have been updated'));
+    }else{
+        // first time insert data
+        drupal_write_record('inventory_config', $data);
+        // display message
+        drupal_set_message(t('The settings have been saved'));
+    }
 }

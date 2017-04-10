@@ -7,7 +7,7 @@
 /**
  * Implements hook_schema().
  */
-/* function inventory_schema() {
+ function inventory_schema() {
   $schema['inventory_config'] = array(
     'description' => 'inventory configuration settings.',
     'fields' => array(
@@ -35,16 +35,17 @@
       ),
       'price_field' => array(
         'type' => 'varchar',
-         'length' => 50,
+        'length' => 50,
         'not null' => TRUE,
         'default' => '',
         'description' => 'Price field machine name',
         'translatable' => TRUE,
       ),
       'modified_date' => array(
-        'type' => 'datetime',
+        'type' => 'varchar',
+        'length' => 50,
         'not null' => TRUE,
-        'default' => 'NOW',
+        'default' => '',
         'description' => 'Last modified date and time',
         'translatable' => FALSE,
       ),  
@@ -58,7 +59,7 @@
 
   return $schema;
 }
-*/
+
 /**
  * Implements hook_uninstall().
  */
@@ -66,6 +67,7 @@ function inventory_uninstall() {
   variable_del('inventory_default_status');
   variable_del('inventory_threshold_limit');
   variable_del('inventory_threshold_window');
+   db_drop_table('inventory_config');
 }
 
 
