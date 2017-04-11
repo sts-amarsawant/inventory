@@ -47,63 +47,54 @@ function inventory_menu() {
 /**
 * Admin form to config inventory settings
 */
-global $data_exists;
 
 function inventory_config_form($form, &$form_state) {
-    global $data_exists;
     // to display exiting data for editable form
-    $table = 'inventory_config'; // without prefix
-    
+    $table = 'inventory_config'; // without prefix  
     if( db_table_exists($table) ){
-       $result = db_select('inventory_config', 'i')
-                 ->fields('i')
-                 ->execute()
-                 ->fetchAssoc();
+       $result = inventory_get_data($table);
     }
-    if( !empty($result) ){
-        $data_exists = TRUE;
-    }else {
-        $data_exists = FALSE;
+    if( empty($result) ){
         $result = array( 'content_type' => NULL,
                          'unit_field' => NULL,
                          'price_field' => NULL,
-                  );
+                    );
     }
     
     // inventory config form        
-  $form['inventory_content_type'] = array(
-                                '#type' => 'textfield',
-                                '#title' => 'Content Type',
-                                '#description' => t('Please enter machine name of content type.'),
-                                '#size' => 40,
-                                '#maxlength' => 50,
-                                '#value' => $result['content_type'],
-                                '#required' => TRUE,
-                            );
+    $form['inventory_content_type'] = array(
+                                            '#type' => 'textfield',
+                                            '#title' => 'Content Type',
+                                            '#description' => t('Please enter machine name of content type.'),
+                                            '#size' => 40,
+                                            '#maxlength' => 50,
+                                            '#value' => $result['content_type'],
+                                            '#required' => TRUE,
+                                        );
  
-  $form['inventory_unit_field'] = array(
-                                '#type' => 'textfield',
-                                '#title' => 'Unit Field',
-                                '#description' => t('Please enter machine name of unit field.'),
-                                '#size' => 40,
-                                '#maxlength' => 50,
-                                '#value' => $result['unit_field'],
-                                '#required' => TRUE,
-                            );
+    $form['inventory_unit_field'] = array(
+                                            '#type' => 'textfield',
+                                            '#title' => 'Unit Field',
+                                            '#description' => t('Please enter machine name of unit field.'),
+                                            '#size' => 40,
+                                            '#maxlength' => 50,
+                                            '#value' => $result['unit_field'],
+                                            '#required' => TRUE,
+                                        );
   
-  $form['inventory_price_field'] = array(
-                                '#type' => 'textfield',
-                                '#title' => 'Price Field',
-                                '#description' => t('Please enter machine name of price field.'),
-                                '#size' => 40,
-                                '#maxlength' => 50,
-                                '#value' => $result['price_field'],
-                                '#required' => TRUE,
-                             );
+    $form['inventory_price_field'] = array(
+                                            '#type' => 'textfield',
+                                            '#title' => 'Price Field',
+                                            '#description' => t('Please enter machine name of price field.'),
+                                            '#size' => 40,
+                                            '#maxlength' => 50,
+                                            '#value' => $result['price_field'],
+                                            '#required' => TRUE,
+                                        );
     // Submit button
-  $form['submit'] = array(
+    $form['submit'] = array(
                              '#type' => 'submit',
-                              '#value' => t('Save settings'),
+                             '#value' => t('Save settings'),
                       );
   // Save dat automatically to drupal variable table
   //return system_settings_form($form);
@@ -112,29 +103,84 @@ function inventory_config_form($form, &$form_state) {
 }
 
 /**
+*
+ * form validation
+ * 
+ */
+function inventory_config_form_validate($form, &$form_state){
+    
+    if ( empty($form_state['input']['inventory_content_type']) ) {
+        form_set_error('inventory_content_type', 'Content Type field is required!');
+    }
+    if ( empty($form_state['input']['inventory_unit_field']) ) {
+        form_set_error('inventory_unit_field', 'Unit field is required!');
+    }
+    if ( empty($form_state['input']['inventory_price_field']) ) {
+        form_set_error('inventory_price_field', 'Price field is required!');
+    }
+}
+
+/**
  * Form submission handler for inventory configuration settings
  */
 function inventory_config_form_submit($form, &$form_state) {
-    global $data_exists;
-    $today = date("Y-m-d H:i:s");
-    $data = array( 'content_type' => $form_state['values']['inventory_content_type'],
-                   'unit_field' => $form_state['values']['inventory_unit_field'],
-                   'price_field' => $form_state['values']['inventory_price_field'],
+    $table = 'inventory_config'; 
+    
+    $today = date("Y-m-d H:i:s");   
+    $data = array( 'content_type' => $form_state['input']['inventory_content_type'],
+                   'unit_field' => $form_state['input']['inventory_unit_field'],
+                   'price_field' => $form_state['input']['inventory_price_field'],
                    'modified_date' => $today
-            );
-    // using drupal core function to insert/update record
-    if( $data_exists ){
+                );
+    
+    $result = inventory_get_data($table);
+    
+    if( !empty( $result ) && !empty( $result['inventory_id'] ) ){
         // update data
-        db_update('inventory_config') // Table name 
-            ->fields( $data )
-            ->condition('inventory_id', 1, '=')
+       inventory_update_data($table, $data, $result['inventory_id']);
+       
+    } else {
+       // insert data
+       inventory_insert_data($table, $data);
+    }
+}
+
+/**
+ * using drupal core function to fetch data
+ */
+function inventory_get_data($table){
+    if( !empty($table) ){
+        $result = db_select( $table, 'i')
+                    ->fields('i')
+                    ->execute()
+                    ->fetchAssoc();
+        return $result;
+    }
+}
+
+/**
+ * using drupal core function to insert data
+ */
+function inventory_insert_data($table, $data){
+    if( !empty($table) && !empty($data) ){
+     
+      drupal_write_record($table , $data);
+     
+      // display message
+     drupal_set_message(t('The settings have been saved'));
+    }
+}
+/**
+ *  using drupal core function to update data
+ */
+function inventory_update_data($table, $data, $inventory_id){
+   
+    if( !empty($table) && !empty($data) && !empty($inventory_id) ){
+        db_update($table) // Table name 
+            ->fields($data)
+            ->condition('inventory_id', $inventory_id , '=')
             ->execute();
         // display message
         drupal_set_message(t('The settings have been updated'));
-    }else{
-        // first time insert data
-        drupal_write_record('inventory_config', $data);
-        // display message
-        drupal_set_message(t('The settings have been saved'));
     }
 }
