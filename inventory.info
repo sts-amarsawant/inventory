@@ -1,5 +1,6 @@
 name = Inventory
 description = Inventory Management System
+dependencies[] = views
 package = Inventory
 version = 0.1
 core = 7.x

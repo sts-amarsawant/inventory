@@ -63,11 +63,20 @@
 /**
  * Implements hook_uninstall().
  */
+function inventory_install() {
+   variable_set('inventory_tbl_name', 'inventory_config');
+}
+
+/**
+ * Implements hook_uninstall().
+ */
 function inventory_uninstall() {
-  variable_del('inventory_default_status');
-  variable_del('inventory_threshold_limit');
-  variable_del('inventory_threshold_window');
-   db_drop_table('inventory_config');
+    // get module table name
+    $table = variable_get('inventory_tbl_name');
+    //delete module table
+    db_drop_table($table);
+    // delete variable
+    variable_del('inventory_tbl_name');
 }
 
 
