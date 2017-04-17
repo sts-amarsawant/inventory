@@ -65,6 +65,7 @@
  */
 function inventory_install() {
    variable_set('inventory_tbl_name', 'inventory_config');
+   variable_set('inventory_view_master', 'master_dashboard');
 }
 
 /**
@@ -77,6 +78,13 @@ function inventory_uninstall() {
     db_drop_table($table);
     // delete variable
     variable_del('inventory_tbl_name');
+    
+    $view_name = variable_get('inventory_view_master');
+        // Check the view master dashboard.
+    if ($view = views_get_view($view_name) ) {
+      // Delete the view master dashboard.
+      views_delete_view($view);
+    }
 }
 
 

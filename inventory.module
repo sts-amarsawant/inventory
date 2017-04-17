@@ -96,7 +96,7 @@ function inventory_config_form($form, &$form_state) {
                              '#type' => 'submit',
                              '#value' => t('Save settings'),
                       );
-  // Save dat automatically to drupal variable table
+  // Save data automatically to drupal variable table
   //return system_settings_form($form);
   
   return $form;
@@ -104,19 +104,40 @@ function inventory_config_form($form, &$form_state) {
 
 /**
 *
- * form validation
+ * Advanced form validation for form fields
  * 
  */
 function inventory_config_form_validate($form, &$form_state){
     
-    if ( empty($form_state['input']['inventory_content_type']) ) {
-        form_set_error('inventory_content_type', 'Content Type field is required!');
+    if ( !empty($form_state['input']['inventory_content_type']) ) {
+        // Use drupal core function check if content type exists
+        $cnt_type = node_type_get_type( $form_state['input']['inventory_content_type'] );
+        if( empty($cnt_type) || $cnt_type->type != $form_state['input']['inventory_content_type'] ){
+            form_set_error('inventory_content_type', 'Please enter valid Content Type!');
+        }
+    } else {
+            form_set_error('inventory_content_type', 'Content Type field is required!');
     }
-    if ( empty($form_state['input']['inventory_unit_field']) ) {
-        form_set_error('inventory_unit_field', 'Unit field is required!');
+    
+    if ( !empty($form_state['input']['inventory_unit_field']) ) {
+       // Use drupal core function check if unit field exists
+       $field_valid = field_info_field($form_state['input']['inventory_unit_field']);
+        if( empty($field_valid) || $field_valid['field_name'] != $form_state['input']['inventory_unit_field'] ){
+            form_set_error('inventory_unit_field', 'Please enter valid Unit field!');
+        }
+       
+    } else {
+            form_set_error('inventory_unit_field', 'Unit field is required!');
     }
-    if ( empty($form_state['input']['inventory_price_field']) ) {
-        form_set_error('inventory_price_field', 'Price field is required!');
+    
+    if ( !empty($form_state['input']['inventory_price_field']) ) {
+       // Use drupal core function check if price field exists
+       $field_valid = field_info_field($form_state['input']['inventory_price_field']);
+        if( empty($field_valid) || $field_valid['field_name'] != $form_state['input']['inventory_price_field'] ){
+            form_set_error('inventory_price_field', 'Please enter valid Price field!');
+        }
+    } else {
+            form_set_error('inventory_price_field', 'Price field is required!');
     }
 }
 
