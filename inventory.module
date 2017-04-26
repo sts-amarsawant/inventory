@@ -41,6 +41,17 @@ function inventory_menu() {
     'weight' => -15,
   );
   
+  $items['admin/inventory/dashboard'] = array(
+    'title' => 'Master Dashboard',
+    'description' => 'All in one view and manage your inventory.',
+    'page callback' => 'inventory_display_view',
+    'access arguments' => array('administer users'),
+    'type' => MENU_NORMAL_ITEM,
+    // Make this appear first, so for example, in admin menus, it shows up on
+    // the top corner of the window as a convenient "home link".
+    'weight' => -15,
+  );
+  
   return $items;
 }
 
@@ -98,21 +109,16 @@ function inventory_config_form($form, &$form_state) {
                       );
     
      // View button
-    $btn_type = ( !empty($result['content_type']) && !empty($result['unit_field']) && !empty($result['price_field']) ) ? 'button' : 'hidden';
+    $btn_type = ( !empty($result['content_type']) && !empty($result['unit_field']) && !empty($result['price_field']) ) ? 'link' : 'hidden';
     $form['view_dash'] = array(
                              '#type' => $btn_type,
-                             '#value' => t('Inventory Dashboard'),
-                             '#ajax' => array(
-                                                'event' => 'click',
-                                                'callback' => 'inventory_display_view',
-                                                'wrapper' => 'content',
-                                                'method' => 'replace',
-                                                'effect' => 'fade'
-                                            ),
-                             );
+                             '#class' => 'button',
+                             '#title' => t('Go to Master Dashboard'),
+                             '#href' => 'admin/inventory/dashboard'
+                            );
+    
   // Save data automatically to drupal variable table
   //return system_settings_form($form);
-  
   return $form;
 }
 
@@ -126,6 +132,7 @@ function inventory_config_form_validate($form, &$form_state){
     if ( !empty($form_state['input']['inventory_content_type']) ) {
         // Use drupal core function check if content type exists
         $cnt_type = node_type_get_type( $form_state['input']['inventory_content_type'] );
+        
         if( empty($cnt_type) || $cnt_type->type != $form_state['input']['inventory_content_type'] ){
             form_set_error('inventory_content_type', 'Please enter valid Content Type!');
         }
@@ -134,9 +141,10 @@ function inventory_config_form_validate($form, &$form_state){
     }
     
     if ( !empty($form_state['input']['inventory_unit_field']) ) {
-       // Use drupal core function check if unit field exists
-       $field_valid = field_info_field($form_state['input']['inventory_unit_field']);
-       $valid_cnt_unit = !empty($field_valid['bundles']['node']) ? implode( $field_valid['bundles']['node']) : NULL;
+        // Use drupal core function check if unit field exists
+        $field_valid = field_info_field($form_state['input']['inventory_unit_field']);
+        $valid_cnt_unit = !empty($field_valid['bundles']['node']) ? implode( $field_valid['bundles']['node']) : NULL;
+        
         if( empty($field_valid) || $field_valid['field_name'] != $form_state['input']['inventory_unit_field'] || empty($valid_cnt_unit) || $valid_cnt_unit != $form_state['input']['inventory_content_type'] ){
             form_set_error('inventory_unit_field', 'Please enter valid Unit field!');
         }
@@ -149,7 +157,7 @@ function inventory_config_form_validate($form, &$form_state){
        // Use drupal core function check if price field exists
        $field_valid = field_info_field($form_state['input']['inventory_price_field']);
        $valid_cnt_price = !empty($field_valid['bundles']['node']) ? implode( $field_valid['bundles']['node']) : NULL;
-        if( empty($field_valid) || $field_valid['field_name'] != $form_state['input']['inventory_price_field'] || empty($valid_cnt_price) || $valid_cnt_price != $form_state['input']['inventory_content_type']){
+       if( empty($field_valid) || $field_valid['field_name'] != $form_state['input']['inventory_price_field'] || empty($valid_cnt_price) || $valid_cnt_price != $form_state['input']['inventory_content_type']){
             form_set_error('inventory_price_field', 'Please enter valid Price field!');
         }
     } else {
@@ -202,28 +210,20 @@ function inventory_insert_data($table, $data){
     if( !empty($table) && !empty($data) ){
      
       drupal_write_record($table , $data);
-      
       // display message
-     drupal_set_message(t('The settings have been saved'));
+      drupal_set_message(t('The settings have been saved'));
     }
 }
 /**
  *  using drupal core function to update data
  */
-function inventory_update_data($table, $data, $inventory_id){
-   
+function inventory_update_data($table, $data, $inventory_id){                                                                                            
+    
     if( !empty($table) && !empty($data) && !empty($inventory_id) ){
         db_update($table) // Table name 
             ->fields($data)
             ->condition('inventory_id', $inventory_id , '=')
             ->execute();
-        
-        $view_name = variable_get('inventory_view_master');
-        // Check the view master dashboard.
-        if( $view = views_get_view($view_name) ) {
-            $view->display->display_options['filters']['type']['value'] = $data['content_type'];
-            views_save_view($view);
-        }
         // display message
         drupal_set_message(t('The settings have been updated'));
     }
@@ -237,7 +237,7 @@ function inventory_update_data($table, $data, $inventory_id){
 /**
  * Implements hook_views_api().
  */
-function inventory_views_api($module, $api) {
+function inventory_views_api($module, $api){
   if ($module == 'views' && $api == 'views_default') {
     return array('version' => 2);
   }
@@ -247,16 +247,15 @@ function inventory_views_api($module, $api) {
  * On Click on Inventory Dashboard Button display view
  */
 function inventory_display_view(){
-    $html = '<p> View not available!</p>';
+    $html = '<p> Currently Not available! Please check settings here <a href="@inventory">Inventory</a> </p>';
     $view_name = variable_get('inventory_view_master');
         // Check the view master dashboard.
-    if ($view = views_get_view($view_name) ) {
+    if ( $view = views_get_view( $view_name ) ) {
       // Display the view master dashboard.
-       
-        $view->set_display('Master');
-        $view->pre_execute();
-        return $view->render('Master');
+      $view->set_display('Master');
+      $view->pre_execute();
+      return $view->render('Master');
     } else {
-       return render($html);
+       return render( $html );
     }
 }

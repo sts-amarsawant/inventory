@@ -71,7 +71,7 @@ function inventory_install() {
 /**
  * Implements hook_uninstall().
  */
-function inventory_uninstall() {
+function inventory_uninstall(){
     // get module table name
     $table = variable_get('inventory_tbl_name');
     //delete module table
@@ -81,7 +81,7 @@ function inventory_uninstall() {
     
     $view_name = variable_get('inventory_view_master');
         // Check the view master dashboard.
-    if ($view = views_get_view($view_name) ) {
+    if ( $view = views_get_view($view_name) ) {
       // Delete the view master dashboard.
       views_delete_view($view);
     }

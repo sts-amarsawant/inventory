@@ -11,16 +11,22 @@
 function inventory_views_default_views() {
     $views = array();
     // get inventory config details
-   $table = variable_get('inventory_tbl_name');
+    $table = variable_get('inventory_tbl_name');
     $result = inventory_get_data($table);
     
-    if( !empty($result) ){
+    if ( !empty( $result ) ){
         // get req. data from db   
         $content_type_name = $result['content_type'];     
         $price_field_name = $result['price_field']; 
         $unit_field_name = $result['unit_field']; 
         
-        $view_name = variable_get('inventory_view_master');  
+        $view_name = variable_get('inventory_view_master'); 
+            // Check the view master dashboard is already exists.
+        if ( $view = views_get_view( $view_name ) ) {
+          // Delete the view master dashboard.
+          views_delete_view($view);
+        }
+        
         $view = new view();
         $view->name = $view_name;
         $view->description = 'View and mange you inventory here...';
@@ -40,7 +46,7 @@ function inventory_views_default_views() {
         $handler->display->display_options['query']['type'] = 'views_query';
         $handler->display->display_options['exposed_form']['type'] = 'basic';
         $handler->display->display_options['pager']['type'] = 'full';
-        $handler->display->display_options['pager']['options']['items_per_page'] = '10';
+        $handler->display->display_options['pager']['options']['items_per_page'] = '5';
         $handler->display->display_options['pager']['options']['offset'] = '0';
         $handler->display->display_options['style_plugin'] = 'table';
         $handler->display->display_options['style_options']['columns'] = array( 'title' => 'title',);
@@ -80,7 +86,7 @@ function inventory_views_default_views() {
           'prefix_suffix' => 1,
         );
         
-       /* Field: Content: Unit */
+        /* Field: Content: Unit */
         $handler->display->display_options['fields'][$unit_field_name]['id'] = $unit_field_name;
         $handler->display->display_options['fields'][$unit_field_name]['table'] = 'field_data_'.$unit_field_name;
         $handler->display->display_options['fields'][$unit_field_name]['field'] = $unit_field_name;
